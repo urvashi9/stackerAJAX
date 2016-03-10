@@ -1,3 +1,66 @@
+$(document).ready( function() {
+	$('.unanswered-getter').submit( function(e){
+		e.preventDefault();
+		// zero out results if previous search has run
+		$('.results').html('');
+		// get the value of the tags the user submitted
+		var tags = $(this).find("input[name='tags']").val();
+		getUnanswered(tags);
+	});
+	$('.inspiration-getter').submit(function(e){
+		e.preventDefault();
+		$('.results').html('');
+		var topic=$(this).find("input[name='answerers']").val();
+		console.log(topic);
+		getInspiration(topic);
+	});
+});
+
+var showTopAnswerer = function(topAnswerer){
+	var result = $('.templates .answerer').clone();
+
+	var top = result.find('.top-answerer');
+	top.html('<p>Name: <a target="_blank" '+ 'href=http://stackoverflow.com/users/' + topAnswerer.user.user_id + ' >' + topAnswerer.user.display_name + '</a></p>' + '<p>Reputation: ' + topAnswerer.user.reputation + '</p>');
+
+	var numberOfPosts=result.find('.posts');
+	numberOfPosts.text(topAnswerer.post_count);
+
+	var  score=result.find('.score');
+	score.text(topAnswerer.score);
+
+	return result;
+};
+
+
+// takes a string of semi-colon separated tags to be searched
+// for on StackOverflow
+
+var getInspiration = function(topic){
+
+	var request = {
+		site:'stackoverflow',
+	};
+
+	$.ajax({
+		url:"http://api.stackexchange.com/2.2/tags/"+topic+"/top-answerers/all_time",
+		data:request,
+		dataType:"jsonp",
+		type:"GET",
+	})
+
+	.done(function(result){
+		$.each(result.items,function(i,item){
+			var topAnswerer = showTopAnswerer(item);
+			$('.results').append(topAnswerer);
+		});
+	})
+
+	.fail(function(jqXHR,error){
+		var errorElem=showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
 // this function takes the question object returned by the StackOverflow request
 // and returns new result to be appended to DOM
 var showQuestion = function(question) {
@@ -82,13 +145,6 @@ var getUnanswered = function(tags) {
 };
 
 
-$(document).ready( function() {
-	$('.unanswered-getter').submit( function(e){
-		e.preventDefault();
-		// zero out results if previous search has run
-		$('.results').html('');
-		// get the value of the tags the user submitted
-		var tags = $(this).find("input[name='tags']").val();
-		getUnanswered(tags);
-	});
-});
+
+
+
